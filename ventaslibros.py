@@ -31,14 +31,14 @@ def realizar_busqueda(query, api_key):
         return None
 
 # Función para estimar ventas basadas en los parámetros y datos de búsqueda
-def estimar_ventas(titulo, genero, precio, promocion):
+def estimar_ventas(titulo, genero, precio, promocion, formato):
     api_key = get_serper_api_key()
     if not api_key:
         return None
 
     # Crear una consulta basada en los parámetros del libro
     promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-    consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} euros {promocion_texto}"
+    consulta = f"ventas mensuales libros {genero} '{titulo}' formato {formato} precio {precio} dólares {promocion_texto}"
 
     st.write("Realizando búsqueda para estimar ventas...")
 
@@ -46,19 +46,23 @@ def estimar_ventas(titulo, genero, precio, promocion):
     if not resultados:
         return None
 
-    # Aquí puedes personalizar cómo procesar los resultados de la búsqueda
-    # Para este ejemplo, simplemente contamos el número de resultados y los usamos como base
-    # para la estimación. En una aplicación real, querrías analizar los datos más detalladamente.
-
+    # Procesar los resultados de la búsqueda
     try:
         total_resultados = resultados.get("searchInformation", {}).get("totalResults", "0")
         total_resultados = int(total_resultados)
     except (ValueError, TypeError):
         total_resultados = 0
 
-    # Lógica simple de estimación: supongamos que cada resultado representa potenciales ventas
-    # Multiplicamos por un factor para simular la conversión
-    factor_conversion = 10  # Este factor puede ajustarse basado en datos reales
+    # Asignar factor de conversión basado en el formato
+    if formato.lower() == "ebook":
+        factor_conversion = 12  # Mayor potencial de ventas
+    elif formato.lower() == "softcover":
+        factor_conversion = 10  # Buen equilibrio
+    elif formato.lower() == "hardcover":
+        factor_conversion = 8   # Menor potencial de ventas
+    else:
+        factor_conversion = 10  # Valor por defecto
+
     ventas_estimadas = total_resultados * factor_conversion
 
     # Ajustar ventas si se está promocionando (mercadeando)
@@ -89,7 +93,15 @@ genero = st.selectbox("Género", [
     "Desarrollo Personal",
     "Otro"
 ])
-precio = st.number_input("Precio (€)", min_value=0.0, step=0.5)
+
+precio = st.number_input("Precio ($)", min_value=0.0, step=0.5)
+
+formato = st.selectbox("Formato", [
+    "Ebook",
+    "Softcover",
+    "Hardcover"
+])
+
 promocion = st.checkbox("¿Se está promocionando el libro?")
 
 # Botón para estimar ventas
@@ -97,7 +109,7 @@ if st.button("Estimar Ventas Mensuales"):
     if not titulo:
         st.error("Por favor, ingrese el título del libro.")
     else:
-        ventas = estimar_ventas(titulo, genero, precio, promocion)
+        ventas = estimar_ventas(titulo, genero, precio, promocion, formato)
         if ventas is not None:
             st.success(f"Las ventas estimadas mensuales son: {ventas} unidades.")
 
@@ -106,7 +118,7 @@ if st.checkbox("Mostrar resultados de búsqueda"):
     api_key = get_serper_api_key()
     if api_key and titulo:
         promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-        consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} euros {promocion_texto}"
+        consulta = f"ventas mensuales libros {genero} '{titulo}' formato {formato} precio {precio} dólares {promocion_texto}"
         resultados = realizar_busqueda(consulta, api_key)
         if resultados:
             st.json(resultados)
