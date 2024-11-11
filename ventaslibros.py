@@ -37,7 +37,8 @@ def estimar_ventas(titulo, genero, precio, promocion):
         return None
 
     # Crear una consulta basada en los parámetros del libro
-    consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} promoción {'sí' if promocion else 'no'}"
+    promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
+    consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} euros {promocion_texto}"
 
     st.write("Realizando búsqueda para estimar ventas...")
 
@@ -60,9 +61,9 @@ def estimar_ventas(titulo, genero, precio, promocion):
     factor_conversion = 10  # Este factor puede ajustarse basado en datos reales
     ventas_estimadas = total_resultados * factor_conversion
 
-    # Ajustar ventas si hay promoción
+    # Ajustar ventas si se está promocionando (mercadeando)
     if promocion:
-        ventas_estimadas *= 1.2  # Aumenta un 20% si hay promoción
+        ventas_estimadas *= 1.3  # Aumenta un 30% si se está promocionando
 
     return ventas_estimadas
 
@@ -70,9 +71,26 @@ def estimar_ventas(titulo, genero, precio, promocion):
 st.header("Ingrese los detalles del libro")
 
 titulo = st.text_input("Título del Libro", "")
-genero = st.selectbox("Género", ["Ficción", "No Ficción", "Ciencia", "Historia", "Biografía", "Otro"])
+genero = st.selectbox("Género", [
+    "Ficción", 
+    "No Ficción", 
+    "Ciencia", 
+    "Historia", 
+    "Biografía", 
+    "Fantasía", 
+    "Misterio", 
+    "Romance", 
+    "Thriller", 
+    "Terror", 
+    "Poesía", 
+    "Autoayuda", 
+    "Infantil", 
+    "Juvenil", 
+    "Desarrollo Personal",
+    "Otro"
+])
 precio = st.number_input("Precio (€)", min_value=0.0, step=0.5)
-promocion = st.checkbox("¿Está en promoción?")
+promocion = st.checkbox("¿Se está promocionando el libro?")
 
 # Botón para estimar ventas
 if st.button("Estimar Ventas Mensuales"):
@@ -87,7 +105,8 @@ if st.button("Estimar Ventas Mensuales"):
 if st.checkbox("Mostrar resultados de búsqueda"):
     api_key = get_serper_api_key()
     if api_key and titulo:
-        consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} promoción {'sí' if promocion else 'no'}"
+        promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
+        consulta = f"ventas mensuales libros {genero} '{titulo}' precio {precio} euros {promocion_texto}"
         resultados = realizar_busqueda(consulta, api_key)
         if resultados:
             st.json(resultados)
