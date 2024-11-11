@@ -40,11 +40,19 @@ def estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato):
     promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
     consulta = f"ventas mensuales libros {genero} '{titulo_o_keyword}' formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
 
+    # Mostrar la consulta para depuración
+    st.subheader("Consulta de Búsqueda:")
+    st.code(consulta, language='plaintext')
+
     st.write("Realizando búsqueda para estimar ventas en Amazon...")
 
     resultados = realizar_busqueda(consulta, api_key)
     if not resultados:
         return None
+
+    # Mostrar la respuesta completa de la API para depuración
+    st.subheader("Respuesta de la API:")
+    st.json(resultados)
 
     # Procesar los resultados de la búsqueda
     try:
@@ -52,6 +60,8 @@ def estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato):
         total_resultados = int(total_resultados)
     except (ValueError, TypeError):
         total_resultados = 0
+
+    st.write(f"Total de Resultados Encontrados: {total_resultados}")
 
     # Asignar factor de conversión basado en el formato y enfoque en Amazon
     if formato.lower() == "ebook":
@@ -114,6 +124,8 @@ if st.button("Estimar Ventas Mensuales en Amazon"):
         ventas = estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato)
         if ventas is not None:
             st.success(f"Las ventas estimadas mensuales en Amazon son: {ventas} unidades.")
+        else:
+            st.warning("No se pudieron estimar las ventas. Revisa los detalles ingresados o intenta nuevamente.")
 
 # Opcional: Mostrar los resultados de la búsqueda para transparencia
 if st.checkbox("Mostrar resultados de búsqueda en Amazon"):
