@@ -38,7 +38,8 @@ def estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato):
 
     # Crear una consulta basada en los parámetros del libro o keyword, enfocada en Amazon
     promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-    consulta = f"ventas mensuales libros {genero} '{titulo_o_keyword}' formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
+    # Ajustar la consulta para ser menos restrictiva
+    consulta = f"ventas mensuales libros {genero} \"{titulo_o_keyword}\" formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
 
     # Mostrar la consulta para depuración
     st.subheader("Consulta de Búsqueda:")
@@ -132,7 +133,7 @@ if st.checkbox("Mostrar resultados de búsqueda en Amazon"):
     api_key = get_serper_api_key()
     if api_key and titulo_o_keyword:
         promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-        consulta = f"ventas mensuales libros {genero} '{titulo_o_keyword}' formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
+        consulta = f"ventas mensuales libros {genero} \"{titulo_o_keyword}\" formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
         resultados = realizar_busqueda(consulta, api_key)
         if resultados:
             st.json(resultados)
