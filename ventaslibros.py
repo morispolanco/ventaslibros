@@ -3,7 +3,7 @@ import requests
 import json
 
 # Título de la aplicación
-st.title("Estimador de Ventas de Libros")
+st.title("Estimador de Ventas de Libros en Amazon")
 
 # Función para obtener la API Key de Serper desde los secrets
 def get_serper_api_key():
@@ -31,16 +31,16 @@ def realizar_busqueda(query, api_key):
         return None
 
 # Función para estimar ventas basadas en los parámetros y datos de búsqueda
-def estimar_ventas(titulo, genero, precio, promocion, formato):
+def estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato):
     api_key = get_serper_api_key()
     if not api_key:
         return None
 
-    # Crear una consulta basada en los parámetros del libro
+    # Crear una consulta basada en los parámetros del libro o keyword, enfocada en Amazon
     promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-    consulta = f"ventas mensuales libros {genero} '{titulo}' formato {formato} precio {precio} dólares {promocion_texto}"
+    consulta = f"ventas mensuales libros {genero} '{titulo_o_keyword}' formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
 
-    st.write("Realizando búsqueda para estimar ventas...")
+    st.write("Realizando búsqueda para estimar ventas en Amazon...")
 
     resultados = realizar_busqueda(consulta, api_key)
     if not resultados:
@@ -53,15 +53,15 @@ def estimar_ventas(titulo, genero, precio, promocion, formato):
     except (ValueError, TypeError):
         total_resultados = 0
 
-    # Asignar factor de conversión basado en el formato
+    # Asignar factor de conversión basado en el formato y enfoque en Amazon
     if formato.lower() == "ebook":
-        factor_conversion = 12  # Mayor potencial de ventas
+        factor_conversion = 15  # Mayor potencial de ventas en Amazon para Ebooks
     elif formato.lower() == "softcover":
-        factor_conversion = 10  # Buen equilibrio
+        factor_conversion = 12  # Buen equilibrio
     elif formato.lower() == "hardcover":
-        factor_conversion = 8   # Menor potencial de ventas
+        factor_conversion = 10   # Menor potencial de ventas
     else:
-        factor_conversion = 10  # Valor por defecto
+        factor_conversion = 12  # Valor por defecto
 
     ventas_estimadas = total_resultados * factor_conversion
 
@@ -72,9 +72,11 @@ def estimar_ventas(titulo, genero, precio, promocion, formato):
     return ventas_estimadas
 
 # Interfaz de usuario para ingresar los detalles del libro
-st.header("Ingrese los detalles del libro")
+st.header("Ingrese los detalles del libro para ventas en Amazon")
 
-titulo = st.text_input("Título del Libro", "")
+# Campo para ingresar el título o keyword
+titulo_o_keyword = st.text_input("Título o Keyword del Libro", "")
+
 genero = st.selectbox("Género", [
     "Ficción", 
     "No Ficción", 
@@ -105,20 +107,20 @@ formato = st.selectbox("Formato", [
 promocion = st.checkbox("¿Se está promocionando el libro?")
 
 # Botón para estimar ventas
-if st.button("Estimar Ventas Mensuales"):
-    if not titulo:
-        st.error("Por favor, ingrese el título del libro.")
+if st.button("Estimar Ventas Mensuales en Amazon"):
+    if not titulo_o_keyword:
+        st.error("Por favor, ingrese el título o una palabra clave relacionada con el libro.")
     else:
-        ventas = estimar_ventas(titulo, genero, precio, promocion, formato)
+        ventas = estimar_ventas(titulo_o_keyword, genero, precio, promocion, formato)
         if ventas is not None:
-            st.success(f"Las ventas estimadas mensuales son: {ventas} unidades.")
+            st.success(f"Las ventas estimadas mensuales en Amazon son: {ventas} unidades.")
 
 # Opcional: Mostrar los resultados de la búsqueda para transparencia
-if st.checkbox("Mostrar resultados de búsqueda"):
+if st.checkbox("Mostrar resultados de búsqueda en Amazon"):
     api_key = get_serper_api_key()
-    if api_key and titulo:
+    if api_key and titulo_o_keyword:
         promocion_texto = "se está promocionando" if promocion else "no se está promocionando"
-        consulta = f"ventas mensuales libros {genero} '{titulo}' formato {formato} precio {precio} dólares {promocion_texto}"
+        consulta = f"ventas mensuales libros {genero} '{titulo_o_keyword}' formato {formato} precio {precio} dólares {promocion_texto} site:amazon.com"
         resultados = realizar_busqueda(consulta, api_key)
         if resultados:
             st.json(resultados)
