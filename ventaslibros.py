@@ -1,22 +1,21 @@
 import streamlit as st
 import requests
 
-def get_amazon_data(keyword):
-    """Obtiene datos de Amazon usando la API de Serper."""
-    api_key = st.secrets["SERPER_API_KEY"] # Accede a la clave desde los secretos
+def get_google_data(keyword):
+    """Obtiene datos de Google usando la API de Serper."""
+    api_key = st.secrets["SERPER_API_KEY"]
     if not api_key:
         st.error("API Key de Serper no encontrada en los secretos.")
         return None
 
-    url = "https://api.serper.dev/search"
+    url = "https://google.serper.dev/search"  # URL para Google
     headers = {
         "X-API-KEY": api_key,
         "Content-Type": "application/json"
     }
     params = {
         "q": keyword,
-        "engine": "amazon",
-        "location": "us"
+        "location": "us"  # Puedes cambiar la ubicación
     }
     try:
         response = requests.get(url, headers=headers, params=params)
@@ -24,27 +23,27 @@ def get_amazon_data(keyword):
         data = response.json()
         return data
     except requests.exceptions.RequestException as e:
-        st.error(f"Error al obtener datos de Amazon: {e}")
+        st.error(f"Error al obtener datos de Google: {e}")
         return None
 
-def estimate_sales(amazon_data):
-    """Estima las ventas mensuales utilizando un modelo simple."""
-    try:
-        ranking = amazon_data['data'][0]['rank']
-        estimated_sales = 10000 / (ranking + 1)
-        return estimated_sales
-    except (KeyError, IndexError):
-        st.warning("No se pudo extraer el ranking de Amazon. Asegúrate de que la palabra clave sea válida y que la API devuelva datos.")
-        return None
+def estimate_sales(google_data):
+    """Estima las ventas mensuales usando datos de Google.  Necesita ser reescrito."""
+    # ESTE MODELO NECESITA SER REEMPLAZADO.  No hay un ranking directo como en Amazon.
+    # Necesitas identificar qué datos de la respuesta de Google usarás para estimar las ventas.
+    # Por ejemplo, podrías usar el número de resultados o la presencia de anuncios como indicadores.
+    st.warning("El modelo de estimación de ventas necesita ser adaptado para los datos de Google.")
+    return None  # Reemplaza con tu lógica de estimación
 
 
-st.title("Estimador de Ventas de Libros de Amazon")
+st.title("Estimador de Ventas (Google)")
 
 keyword = st.text_input("Introduce la palabra clave del libro (ej: 'El Hobbit'):")
 
 if st.button("Estimar Ventas"):
-    amazon_data = get_amazon_data(keyword)
-    if amazon_data:
-        estimated_sales = estimate_sales(amazon_data)
+    google_data = get_google_data(keyword)
+    if google_data:
+        estimated_sales = estimate_sales(google_data)
         if estimated_sales:
             st.success(f"Estimación de ventas mensuales: {estimated_sales:.2f} unidades")
+        else:
+            st.info("No se pudo generar una estimación de ventas.")
