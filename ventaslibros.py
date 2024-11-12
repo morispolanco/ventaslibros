@@ -1,74 +1,50 @@
 import streamlit as st
 import requests
-import numpy as np
 
-# Obtén la API Key desde los Secrets de Streamlit
-SERPER_API_KEY = st.secrets["SERPER_API_KEY"]
-
-# Función para obtener datos del libro en Amazon usando Serper
 def get_amazon_data(keyword):
-    url = 'https://api.serper.dev/search'
+    """Obtiene datos de Amazon usando la API de Serper."""
+    api_key = st.secrets["SERPER_API_KEY"] # Accede a la clave desde los secretos
+    if not api_key:
+        st.error("API Key de Serper no encontrada en los secretos.")
+        return None
+
+    url = "https://api.serper.dev/search"
     headers = {
-        'X-API-KEY': SERPER_API_KEY,
-        'Content-Type': 'application/json'
+        "X-API-KEY": api_key,
+        "Content-Type": "application/json"
     }
-    query = {
+    params = {
         "q": keyword,
-        "location": "us",
-        "gl": "us",
-        "hl": "en",
-        "num": 1,
-        "tbm": "shop",
-        "site": "amazon"
+        "engine": "amazon",
+        "location": "us"
     }
-    response = requests.post(url, headers=headers, json=query)
-    if response.status_code == 200:
-        results = response.json().get('shopping_results')
-        if results:
-            return results[0]  # Tomar el primer resultado relevante
-    else:
-        st.error("Error al obtener datos de Amazon. Verifica tu API Key.")
-        return None
-
-# Función para estimar las ventas mensuales
-def estimate_monthly_sales(price, rating, review_count):
-    # Suposición de un modelo simple: ventas = (rating * review_count) / precio
     try:
-        sales_estimation = (rating * review_count) / price
-        # Normalizamos el resultado para un rango plausible de ventas
-        estimated_sales = int(np.clip(sales_estimation * 10, 50, 10000))
-        return estimated_sales
-    except:
-        st.error("Error en el cálculo de las ventas.")
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error al obtener datos de Amazon: {e}")
         return None
 
-# Configuración de la aplicación en Streamlit
-st.title("Estimador de Ventas Mensuales de Libros en Amazon")
+def estimate_sales(amazon_data):
+    """Estima las ventas mensuales utilizando un modelo simple."""
+    try:
+        ranking = amazon_data['data'][0]['rank']
+        estimated_sales = 10000 / (ranking + 1)
+        return estimated_sales
+    except (KeyError, IndexError):
+        st.warning("No se pudo extraer el ranking de Amazon. Asegúrate de que la palabra clave sea válida y que la API devuelva datos.")
+        return None
 
-# Entrada de usuario para la palabra clave
-keyword = st.text_input("Introduce una palabra clave para buscar el libro en Amazon:", "Python programming")
 
-# Botón de búsqueda
+st.title("Estimador de Ventas de Libros de Amazon")
+
+keyword = st.text_input("Introduce la palabra clave del libro (ej: 'El Hobbit'):")
+
 if st.button("Estimar Ventas"):
-    # Obtener datos de Amazon
-    data = get_amazon_data(keyword)
-    if data:
-        # Extraer los datos relevantes
-        book_title = data.get('title', 'Título no disponible')
-        price = float(data.get('price', '0').replace('$', ''))
-        rating = float(data.get('rating', '0'))
-        review_count = int(data.get('reviews_count', '0').replace(',', ''))
-
-        # Mostrar los datos obtenidos
-        st.write(f"### Resultados de Amazon para '{keyword}'")
-        st.write(f"**Título:** {book_title}")
-        st.write(f"**Precio:** ${price}")
-        st.write(f"**Rating:** {rating} / 5")
-        st.write(f"**Número de Reseñas:** {review_count}")
-
-        # Estimar ventas mensuales
-        estimated_sales = estimate_monthly_sales(price, rating, review_count)
+    amazon_data = get_amazon_data(keyword)
+    if amazon_data:
+        estimated_sales = estimate_sales(amazon_data)
         if estimated_sales:
-            st.write(f"## Estimación de Ventas Mensuales: {estimated_sales} copias")
-    else:
-        st.warning("No se encontraron datos relevantes para la palabra clave ingresada.")
+            st.success(f"Estimación de ventas mensuales: {estimated_sales:.2f} unidades")
